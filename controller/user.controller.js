@@ -1,13 +1,8 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
 dotenv.config();
-import {
-  createUser,
-  findData,
-  findEmail,
-  findUsername,
-} from '../models/user.models.js';
+import { createUser, findEmail, findUsername } from '../models/user.models.js';
 
 const jwtSecret = process.env.JWTSECRET;
 
@@ -31,11 +26,12 @@ export const login = async (req, res) => {
     data.username = user.username;
     data.email = user.email;
     data.token = token;
-    return res.status(200).send({
-      status: true,
-      msg: 'you are logn succesfully',
-      data: data,
-    });
+    res.render('chat')
+    // return res.status(200).send({
+    //   status: true,
+    //   msg: 'you are logn succesfully',
+    //   data: data,
+    // });
   } catch (err) {
     return res.status(500).send({ status: false, msg: err.message });
   }

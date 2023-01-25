@@ -7,7 +7,7 @@ const secret = process.env.JWTSECRET;
 
 export const redirectRoom = async (req, res) => {
   const token = req.cookies.token;
-  const room = req.query.room;
+  const room = req.query.rooms;
   if (!token) {
     return res.status(400).send({
       status: false,

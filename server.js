@@ -1,6 +1,7 @@
 import express, { urlencoded } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import logger from 'morgan';
 import { createAdapter } from '@socket.io/mongo-adapter';
 import { MongoClient } from 'mongodb';
 import { instrument } from '@socket.io/admin-ui';
@@ -23,9 +24,10 @@ const app = express();
 const httpServer = createServer(app);
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(logger('dev'));
 app.set('view engine', 'ejs');
-app.use(urlencoded({ extended: true }));
 connectDatabase();
 app.use('/', router);
 
@@ -45,7 +47,6 @@ await mongoCollection.createIndex(
 const io = new Server(httpServer, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST'],
   },
 });
 
@@ -70,6 +71,7 @@ io.on('connection', (socket) => {
 
   // create and join room
   socket.on('joinRoom', ({ username, room }) => {
+    console.log('username', username, 'room', room);
     const user = userJoin(socket.id, username, room);
     socket.join(user.room);
     // Welcome current user
@@ -97,12 +99,12 @@ io.on('connection', (socket) => {
   // Runs when client disconnects
   socket.on('disconnect', () => {
     const user = userLeave(socket.id);
+    console.log('user', user);
     if (user) {
       io.to(user.room).emit(
         'message',
         formatMessage(botName, `${user.username} has left the chat`)
       );
-
       // Send users and room info
       io.to(user.room).emit('roomUsers', {
         room: user.room,

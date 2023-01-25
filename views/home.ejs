@@ -1,19 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>webChat</title>
-    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"
+        integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI"
+        crossorigin="anonymous"></script>
 </head>
+
 <body>
     <h3>welcome to chat application</h3>
+    <form action="register" method="POST" enctype="application/x-www-form-urlencoded">
+        <div> user registration</div>
+        <label for="username">username</label><br>
+        <input type="text" name="username" id="username" required /><br>
+        <label for="email">email</label><br>
+        <input type="text" name="email" id="email" required /><br>
+        <label for="password">password</label><br>
+        <input type="text" name="password" id="password" required /><br><br>
+        <button>register</button>
+    </form>
+    <br><br><br><br>
+    <form action="login" method="POST" enctype="application/x-www-form-urlencoded">
+        <div> user login</div>
+        <label for="username">username</label><br>
+        <input type="text" name="username" id="username" required /><br>
+        <label for="password">password</label><br>
+        <input type="text" name="password" id="password" required /><br><br>
+        <button>login</button>
+    </form>
+
     <script>
-        const socket = io('http://localhost:3000')
-        socket.on('connection', ()=>{
-            
-        })
+        const socket = io()
+       
+
     </script>
 </body>
+
 </html>

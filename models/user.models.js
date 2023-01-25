@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('Users', userSchema);
 
 export const findUsername = async (username) => {
-  return await User.findOne({ username: username })
+  return await User.findOne({ username: username });
 };
 
 export const findEmail = async (email) => {
@@ -41,6 +41,6 @@ export const findData = async (id) => {
   return await User.find({ id: id });
 };
 
-export const findId = async (id)=>{
-  return await User.findById(id)
-}
+export const findId = async (id) => {
+  return await User.findById(id);
+};
