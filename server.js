@@ -1,6 +1,9 @@
 import express, { urlencoded } from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/mongo-adapter';
+import { MongoClient } from 'mongodb';
+import { instrument } from '@socket.io/admin-ui';
 import router from './routes/router.route.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -20,11 +23,23 @@ const app = express();
 const httpServer = createServer(app);
 app.use(cors());
 app.use(express.json());
-app.use(cookieParser())
+app.use(cookieParser());
 app.set('view engine', 'ejs');
 app.use(urlencoded({ extended: true }));
 connectDatabase();
 app.use('/', router);
+
+const DB = 'chatData';
+const COLLECTION = 'socket.io-adapter-events';
+const mongoClient = new MongoClient(
+  'mongodb+srv://amarjeet:8ckRS2Equ0wiGgKx@cluster0.9lvsazp.mongodb.net/chat'
+);
+await mongoClient.connect();
+const mongoCollection = mongoClient.db(DB).collection(COLLECTION);
+await mongoCollection.createIndex(
+  { createdAt: 1 },
+  { expireAfterSeconds: 3600, background: true }
+);
 
 // attached http server to the socket.io
 const io = new Server(httpServer, {
@@ -34,7 +49,18 @@ const io = new Server(httpServer, {
   },
 });
 
-// const adminNameSpace = io.of('/admin');
+const adminNameSpace = io.of('/admin');
+
+instrument(io, {
+  auth: false,
+});
+
+io.adapter(
+  createAdapter(mongoCollection, {
+    addCreatedAtField: true,
+  })
+);
+
 // const userNameSpace = io.of('/');
 
 // create a new connection
