@@ -26,7 +26,7 @@ export const login = async (req, res) => {
     data.username = user.username;
     data.email = user.email;
     data.token = token;
-    return res.status(200).send({
+    return res.status(200).json({
       status: true,
       msg: 'you are login succesfully',
       data: data,

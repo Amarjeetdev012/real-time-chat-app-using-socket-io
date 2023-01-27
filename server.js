@@ -4,12 +4,10 @@ import { Server } from 'socket.io';
 import logger from 'morgan';
 import { createAdapter } from '@socket.io/mongo-adapter';
 import { MongoClient } from 'mongodb';
-import { instrument } from '@socket.io/admin-ui';
 import router from './routes/router.route.js';
 import cors from 'cors';
 import dotenv from 'dotenv';
 dotenv.config();
-
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './database/mongoose.database.js';
 import {
@@ -27,7 +25,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(logger('dev'));
-app.set('view engine', 'ejs');
 connectDatabase();
 app.use('/', router);
 
@@ -50,12 +47,6 @@ const io = new Server(httpServer, {
   },
 });
 
-const adminNameSpace = io.of('/admin');
-
-instrument(io, {
-  auth: false,
-});
-
 io.adapter(
   createAdapter(mongoCollection, {
     addCreatedAtField: true,
@@ -68,7 +59,9 @@ io.adapter(
 io.on('connection', (socket) => {
   // * show all rooms
   const allRooms = io.sockets.adapter.rooms;
-
+  socket.emit('allRooms', (allRooms) => {
+    socket.emit('data', allRooms)
+  })
   // create and join room
   socket.on('joinRoom', ({ username, room }) => {
     console.log('username', username, 'room', room);
