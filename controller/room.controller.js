@@ -27,7 +27,7 @@ export const redirectRoom = async (req, res) => {
     const data = {}
     data.username = username
     data.room = room
-    res.status(200).send({ status: true, msg:'you have entered in room succesfully', data: data })
+    res.status(200).json({ status: true, msg:'you have entered in room succesfully', data: data })
   } catch (error) {
     return res.status(500).send({ status: false, msg: err.message });
   }
