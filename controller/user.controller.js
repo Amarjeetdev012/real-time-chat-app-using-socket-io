@@ -26,12 +26,11 @@ export const login = async (req, res) => {
     data.username = user.username;
     data.email = user.email;
     data.token = token;
-    res.render('chat')
-    // return res.status(200).send({
-    //   status: true,
-    //   msg: 'you are logn succesfully',
-    //   data: data,
-    // });
+    return res.status(200).send({
+      status: true,
+      msg: 'you are login succesfully',
+      data: data,
+    });
   } catch (err) {
     return res.status(500).send({ status: false, msg: err.message });
   }
@@ -50,7 +49,7 @@ export const register = async (req, res) => {
       return res.status(400).send({ status: false, msg: 'Email already used' });
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await createUser(email, username, hashedPassword);
-    return res.status(201).send({
+    return res.status(201).json({
       status: true,
       msg: 'you are registered succesfully',
       data: user,
