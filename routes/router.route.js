@@ -5,7 +5,7 @@ import { login, register } from '../controller/user.controller.js';
 const router = express.Router();
 
 router.get('/',(req,res)=>{
-res.render('home')
+res.redirect('https://chat-app-socket-io-peach.vercel.app')
 })
 router.post('/login', login);
 router.post('/register', register);
