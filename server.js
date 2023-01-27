@@ -57,8 +57,10 @@ io.adapter(
 
 // create a new connection
 io.on('connection', (socket) => {
+   console.log(`User connected ${socket.id}`);
   // * show all rooms
   const allRooms = io.sockets.adapter.rooms;
+  console.log('allRooms', allRooms)
   socket.emit('allRooms', (allRooms) => {
     socket.emit('data', allRooms)
   })
