@@ -82,7 +82,17 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
-  console.log('allroomss', io.sockets.adapter.sids);
+  console.log('try1', Object.keys(socket.adapter.rooms));
+  console.log('try2', Object.keys(socket.adapter.rooms)[1]);
+  console.log('try3', Array.from(io.adapter.rooms.entries()));
+  
+  const getRooms = io.sockets.adapter.sids;
+  console.log(
+    'allroomss',
+    getRooms.map((data) => {
+      console.log('data', data);
+    })
+  );
   socket.emit('allRooms', [{ id: 12, room: 2 }]);
 
   // Listen for chatMessage
