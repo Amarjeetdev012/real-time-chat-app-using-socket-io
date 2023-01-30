@@ -82,15 +82,25 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
-  console.log('try1', Object.keys(socket.adapter.rooms));
-  console.log('try2', Object.keys(socket.adapter.rooms)[1]);
-  console.log('try3', Array.from(io.adapter.rooms.entries()));
-  
+  function ActiveRooms() {
+    var activeRooms = [];
+    Object.keys(io.sockets.adapter.rooms).forEach((room) => {
+      var isRoom = true;
+      Object.keys(io.sockets.adapter.sids).forEach((id) => {
+        isRoom = id === room ? false : isRoom;
+      });
+      if (isRoom) activeRooms.push(room);
+    });
+    return activeRooms;
+  }
+  console.log(('try4', ActiveRooms()));
+
   const getRooms = io.sockets.adapter.sids;
+  console.log('try sids', getRooms);
   console.log(
     'allroomss',
-    getRooms.map((data) => {
-      console.log('data', data);
+    getRooms.map((getRooms) => {
+      console.log('data', getRooms);
     })
   );
   socket.emit('allRooms', [{ id: 12, room: 2 }]);
