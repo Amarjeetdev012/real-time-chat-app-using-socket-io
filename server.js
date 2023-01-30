@@ -17,6 +17,7 @@ import {
   getCurrentUser,
 } from './utils/user.utils.js';
 import { formatMessage } from './utils/message.utils.js';
+import { allRooms, createRoom } from './models/room.model.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,11 +61,14 @@ io.on('connection', (socket) => {
   console.log(`User connected ${socket.id}`);
 
   // create and join room
-  socket.on('joinRoom', (username, room) => {
+  socket.on('joinRoom', async (username, room) => {
     console.log('username', username, 'room', room);
     const user = userJoin(socket.id, username, room);
     console.log('join room user', user);
     socket.join(user.room);
+    await createRoom(user.room, user.username);
+    const allRooms = await allRooms();
+    socket.emit('allRooms', allRooms);
     // Welcome current user
     socket.emit(
       'message',
@@ -80,19 +84,6 @@ io.on('connection', (socket) => {
       users: getRoomUsers(user.room),
     });
   });
-
-  // * show all rooms
-
-  const getRooms = io.sockets.adapter.sids;
-  console.log('rooms find',io.adapter.rooms);
-  function mapToObj(data) {
-    const obj = {};
-    for (const [key, value] of data) obj[key] = value;
-    return Object.keys(obj);
-  }
-  const result = mapToObj(getRooms);
-  console.log(mapToObj(getRooms));
-  socket.emit('allRooms', result);
 
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
