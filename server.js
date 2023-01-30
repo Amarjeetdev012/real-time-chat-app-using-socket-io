@@ -82,12 +82,9 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
-  // const allRooms = io.sockets.adapter.rooms;
   console.log('allroomss', io.sockets.adapter.rooms);
-  // socket.emit('allRooms', allRooms);
-  socket.on('getRooms', function () {
-    socket.emit('rooms', io.sockets.adapter.rooms);
-  });
+  socket.emit('allRooms', io.sockets.adapter.rooms);
+
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
     const user = getCurrentUser(socket.id);
