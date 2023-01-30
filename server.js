@@ -1,7 +1,10 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken'
 import logger from 'morgan';
+import MongoStore from 'connect-mongo';
+import session from 'express-session';
 import { createAdapter } from '@socket.io/mongo-adapter';
 import { MongoClient } from 'mongodb';
 import router from './routes/router.route.js';
@@ -18,11 +21,26 @@ import {
   userLeave,
   getCurrentUser,
 } from './utils/user.utils.js';
-import { authenticateUser } from './auth/socket.authentication.js';
 
 const app = express();
+
+const store = MongoStore.create({
+  mongoUrl: process.env.MONGO_URI,
+  autoRemove: 'native',
+});
+
+const sessionMiddleware = session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { maxAge: 69600 },
+  store: store,
+});
+
+app.use(sessionMiddleware);
 const httpServer = createServer(app);
 app.use(cors());
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -46,8 +64,29 @@ const io = new Server(httpServer, {
     origin: '*',
   },
 });
+
+// convert a connect middleware to a Socket.IO middleware
+const wrap = (middleware) => (socket, next) =>
+  middleware(socket.request, {}, next);
+
+io.use(wrap(sessionMiddleware));
 // authenticate user
-io.use(authenticateUser());
+io.use((socket, next) => {
+  if (socket.handshake.query || socket.handshake.query.token) {
+    jwt.verify(
+      socket.handshake.query.token,
+      jwtSecret,
+      function (err, decoded) {
+        if (err) return next(new Error('Authentication error if block'));
+        socket.decoded = decoded;
+        next();
+        console.log('authenticated succesfully');
+      }
+    );
+  } else {
+    next(new Error('Authentication error else block'));
+  }
+});
 
 io.adapter(
   createAdapter(mongoCollection, {
