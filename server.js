@@ -85,7 +85,8 @@ io.on('connection', (socket) => {
   const allRooms = io.sockets.adapter.rooms;
   console.log('allRooms', allRooms);
   socket.emit('allRooms', (allRooms) => {
-    socket.emit('data', allRooms);
+    const allRooms = io.sockets.adapter.rooms;
+    socket.emit(' all rooms data', allRooms);
   });
 
   // Listen for chatMessage

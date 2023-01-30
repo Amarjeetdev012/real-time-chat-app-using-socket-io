@@ -3,8 +3,9 @@ const users = [];
 // Join user to chat
 export const userJoin = (id, username, room) => {
   const user = { id, username, room };
+  console.log('userjoin ', user);
   users.push(user);
-  console.log('userJoin', users)
+  console.log('userJoin', users);
   return user;
 };
 
@@ -15,11 +16,10 @@ export const getCurrentUser = (id) => {
 
 // User leaves chat
 export const userLeave = (id) => {
-  console.log('userleave id',id)
+  console.log('userleave id', id);
   const index = users.findIndex((user) => user.id === id);
   console.log('userLeave index', index);
   if (index !== -1) {
-
     return users.splice(index, 1)[0];
   }
 };
