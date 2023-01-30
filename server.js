@@ -57,7 +57,7 @@ io.adapter(
 // const userNameSpace = io.of('/');
 
 // create a new connection
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log(`User connected ${socket.id}`);
 
   // create and join room
@@ -67,8 +67,8 @@ io.on('connection', (socket) => {
     console.log('join room user', user);
     socket.join(user.room);
     await createRoom(user.room, user.username);
-    const allRooms = await allRooms();
-    socket.emit('allRooms', allRooms);
+    // const allRooms = await allRooms();
+    // socket.emit('allRooms', allRooms);
     // Welcome current user
     socket.emit(
       'message',
@@ -84,6 +84,9 @@ io.on('connection', (socket) => {
       users: getRoomUsers(user.room),
     });
   });
+
+  const allRooms = await allRooms();
+  socket.emit('allRooms', allRooms);
 
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
