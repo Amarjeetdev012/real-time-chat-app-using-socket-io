@@ -82,28 +82,15 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
-  function ActiveRooms() {
-    var activeRooms = [];
-    Object.keys(io.sockets.adapter.rooms).forEach((room) => {
-      var isRoom = true;
-      Object.keys(io.sockets.adapter.sids).forEach((id) => {
-        isRoom = id === room ? false : isRoom;
-      });
-      if (isRoom) activeRooms.push(room);
-    });
-    return activeRooms;
-  }
-  console.log(('try4', ActiveRooms()));
-
   const getRooms = io.sockets.adapter.sids;
-  console.log('try sids', getRooms);
-  console.log(
-    'allroomss',
-    getRooms.forEach((getRooms) => {
-      console.log('data', getRooms);
-    })
-  );
-  socket.emit('allRooms', [{ id: 12, room: 2 }]);
+  function mapToObj(data) {
+    const obj = {};
+    for (const [key, value] of data) obj[key] = value;
+    return obj;
+  }
+  const result = mapToObj(getRooms);
+  console.log(mapToObj(getRooms));
+  socket.emit('allRooms', result);
 
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
