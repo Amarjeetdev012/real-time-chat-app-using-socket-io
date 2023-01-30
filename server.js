@@ -1,4 +1,4 @@
-import express, { urlencoded } from 'express';
+import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import logger from 'morgan';
@@ -6,7 +6,6 @@ import { createAdapter } from '@socket.io/mongo-adapter';
 import { MongoClient } from 'mongodb';
 import router from './routes/router.route.js';
 import cors from 'cors';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 import cookieParser from 'cookie-parser';
@@ -19,6 +18,7 @@ import {
   userLeave,
   getCurrentUser,
 } from './utils/user.utils.js';
+import { authenticateUser } from './auth/socket.authentication.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -46,24 +46,8 @@ const io = new Server(httpServer, {
     origin: '*',
   },
 });
-
-const jwtSecret = process.env.JWTSECRET;
-
-io.use(function (socket, next) {
-  if (socket.handshake.query && socket.handshake.query.token) {
-    jwt.verify(
-      socket.handshake.query.token,
-      jwtSecret,
-      function (err, decoded) {
-        if (err) return next(new Error('Authentication error'));
-        socket.decoded = decoded;
-        next();
-      }
-    );
-  } else {
-    next(new Error('Authentication error'));
-  }
-});
+// authenticate user
+io.use(authenticateUser());
 
 io.adapter(
   createAdapter(mongoCollection, {
@@ -74,7 +58,7 @@ io.adapter(
 // create a new connection
 io.on('connection', async (socket) => {
   console.log(`User connected ${socket.id}`);
-
+  console.log(`total connected clients ${io.engine.clientsCount}`);
   // create and join room
   socket.on('joinRoom', async (username, room) => {
     console.log('username', username, 'room', room);
