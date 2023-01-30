@@ -85,8 +85,8 @@ io.on('connection', async (socket) => {
     });
   });
 
-  const allRooms = await allRooms();
-  socket.emit('allRooms', allRooms);
+  const allRoomsData = await allRooms();
+  socket.emit('allRooms', allRoomsData);
 
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
