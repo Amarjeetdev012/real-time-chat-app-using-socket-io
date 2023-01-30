@@ -57,10 +57,10 @@ io.adapter(
 
 // create a new connection
 io.on('connection', (socket) => {
-   console.log(`User connected ${socket.id}`);
+  console.log(`User connected ${socket.id}`);
 
   // create and join room
-  socket.on('joinRoom', ({ username, room }) => {
+  socket.on('joinRoom', (username, room) => {
     console.log('username', username, 'room', room);
     const user = userJoin(socket.id, username, room);
     socket.join(user.room);
@@ -80,12 +80,12 @@ io.on('connection', (socket) => {
     });
   });
 
-    // * show all rooms
-    const allRooms = io.sockets.adapter.rooms;
-    console.log('allRooms', allRooms)
-    socket.emit('allRooms', (allRooms) => {
-      socket.emit('data', allRooms)
-    })
+  // * show all rooms
+  const allRooms = io.sockets.adapter.rooms;
+  console.log('allRooms', allRooms);
+  socket.emit('allRooms', (allRooms) => {
+    socket.emit('data', allRooms);
+  });
 
   // Listen for chatMessage
   socket.on('chatMessage', (msg) => {
