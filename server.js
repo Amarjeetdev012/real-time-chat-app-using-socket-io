@@ -67,8 +67,6 @@ io.on('connection', async (socket) => {
     console.log('join room user', user);
     socket.join(user.room);
     await createRoom(user.room, user.username);
-    // const allRooms = await allRooms();
-    // socket.emit('allRooms', allRooms);
     // Welcome current user
     socket.emit(
       'message',
@@ -86,6 +84,7 @@ io.on('connection', async (socket) => {
   });
 
   const allRoomsData = await allRooms();
+  console.log('allRoomsData', allRoomsData);
   socket.emit('allRooms', allRoomsData);
 
   // Listen for chatMessage
