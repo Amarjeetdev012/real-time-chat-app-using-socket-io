@@ -6,18 +6,19 @@ import { createAdapter } from '@socket.io/mongo-adapter';
 import { MongoClient } from 'mongodb';
 import router from './routes/router.route.js';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 dotenv.config();
 import cookieParser from 'cookie-parser';
 import { connectDatabase } from './database/mongoose.database.js';
+import { formatMessage } from './utils/message.utils.js';
+import { allRooms, createRoom } from './models/room.model.js';
 import {
   getRoomUsers,
   userJoin,
   userLeave,
   getCurrentUser,
 } from './utils/user.utils.js';
-import { formatMessage } from './utils/message.utils.js';
-import { allRooms, createRoom } from './models/room.model.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,9 +32,7 @@ app.use('/', router);
 
 const DB = 'chatData';
 const COLLECTION = 'socket.io-adapter-events';
-const mongoClient = new MongoClient(
-  'mongodb+srv://amarjeet:8ckRS2Equ0wiGgKx@cluster0.9lvsazp.mongodb.net/chat'
-);
+const mongoClient = new MongoClient(process.env.MONGO_URI);
 await mongoClient.connect();
 const mongoCollection = mongoClient.db(DB).collection(COLLECTION);
 await mongoCollection.createIndex(
@@ -48,13 +47,29 @@ const io = new Server(httpServer, {
   },
 });
 
+const jwtSecret = process.env.JWTSECRET;
+
+io.use(function (socket, next) {
+  if (socket.handshake.query && socket.handshake.query.token) {
+    jwt.verify(
+      socket.handshake.query.token,
+      jwtSecret,
+      function (err, decoded) {
+        if (err) return next(new Error('Authentication error'));
+        socket.decoded = decoded;
+        next();
+      }
+    );
+  } else {
+    next(new Error('Authentication error'));
+  }
+});
+
 io.adapter(
   createAdapter(mongoCollection, {
     addCreatedAtField: true,
   })
 );
-
-// const userNameSpace = io.of('/');
 
 // create a new connection
 io.on('connection', async (socket) => {
@@ -75,7 +90,7 @@ io.on('connection', async (socket) => {
     // Broadcast all user when a user connects
     socket.broadcast
       .to(user.room)
-      .emit('message', formatMessage(`${user.username} has joined the chat`));
+      .emit('message', formatMessage(user.username, `has joined the chat`));
     // the 'roomUsers' event will be broadcast to all connected clients in the 'user.room' room Send users and room info
     io.to(user.room).emit('roomUsers', {
       room: user.room,

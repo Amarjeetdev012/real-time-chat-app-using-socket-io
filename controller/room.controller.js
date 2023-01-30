@@ -5,7 +5,7 @@ dotenv.config();
 
 const secret = process.env.JWTSECRET;
 
-export const redirectRoom = async (req, res) => {
+export const chatRoom = async (req, res) => {
   try {
     const token = req.cookies.token;
     const room = req.query.rooms;
@@ -16,6 +16,7 @@ export const redirectRoom = async (req, res) => {
       });
     }
     const result = jwt.verify(token, secret);
+    console.log('result chat room', result);
     const checkId = await findId(result._id);
     const username = checkId.username;
     if (!checkId) {
@@ -24,11 +25,15 @@ export const redirectRoom = async (req, res) => {
         message: 'you are not a authorised person',
       });
     }
-    const data = {}
-    data.username = username
-    data.room = room
-    res.status(200).json({ status: true, msg:'you have entered in room succesfully', data: data })
+    const data = {};
+    data.username = username;
+    data.room = room;
+    res.status(200).json({
+      status: true,
+      msg: 'you have entered in room succesfully',
+      data: data,
+    });
   } catch (error) {
     return res.status(500).send({ status: false, msg: err.message });
   }
-}
+};
