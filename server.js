@@ -82,8 +82,9 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
-  socket.emit('allRooms', (allRooms) => {
+  socket.emit('allRooms', () => {
     const allRooms = io.sockets.adapter.rooms;
+    console.log('allromms data', allRooms);
     socket.emit(' all rooms data', allRooms);
   });
 
