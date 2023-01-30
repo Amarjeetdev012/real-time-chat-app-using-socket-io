@@ -82,11 +82,13 @@ io.on('connection', (socket) => {
   });
 
   // * show all rooms
+
   const getRooms = io.sockets.adapter.sids;
+  console.log('rooms find',io.adapter.rooms);
   function mapToObj(data) {
     const obj = {};
     for (const [key, value] of data) obj[key] = value;
-    return obj;
+    return Object.keys(obj);
   }
   const result = mapToObj(getRooms);
   console.log(mapToObj(getRooms));
