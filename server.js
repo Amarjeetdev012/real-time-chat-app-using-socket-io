@@ -99,7 +99,7 @@ io.on('connection', (socket) => {
   console.log('try sids', getRooms);
   console.log(
     'allroomss',
-    getRooms.map((getRooms) => {
+    getRooms.forEach((getRooms) => {
       console.log('data', getRooms);
     })
   );
