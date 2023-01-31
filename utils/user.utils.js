@@ -17,7 +17,7 @@ export const getCurrentUser = (id) => {
 // User leaves chat
 export const userLeave = (id) => {
   console.log('userleave id', id);
-  console.log("user leave users", users)
+  console.log('user leave users', users);
   const index = users.findIndex((user) => user.id === id);
   console.log('userLeave index', index);
   if (index !== -1) {

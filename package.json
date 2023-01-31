@@ -22,19 +22,19 @@
   "homepage": "https://github.com/Amarjeetdev012/real-time-chat-app-using-socket-io#readme",
   "dependencies": {
     "@socket.io/mongo-adapter": "^0.2.1",
+    "axios": "^1.2.6",
     "bcrypt": "^5.1.0",
-    "connect-mongo": "^4.6.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
-    "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.4",
     "mongodb": "^4.13.0",
     "mongoose": "^6.8.4",
     "morgan": "^1.10.0",
-    "socket.io": "^4.5.4"
+    "socket.io": "^4.5.4",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

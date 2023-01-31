@@ -20,7 +20,6 @@ export const login = async (req, res) => {
     const data = {};
     data.id = user._id;
     data.username = user.username;
-    data.email = user.email;
     const token = jwt.sign(data, jwtSecret, { expiresIn: '1h' });
     return res.status(200).json({
       status: true,

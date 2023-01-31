@@ -1,14 +1,11 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
 import logger from 'morgan';
-import MongoStore from 'connect-mongo';
-import session from 'express-session';
-import { createAdapter } from '@socket.io/mongo-adapter';
-import { MongoClient } from 'mongodb';
-import router from './routes/router.route.js';
+import { v4 as uuidv4 } from 'uuid';
 import cors from 'cors';
+import router from './routes/router.route.js';
 import dotenv from 'dotenv';
 dotenv.config();
 import cookieParser from 'cookie-parser';
@@ -21,42 +18,19 @@ import {
   userLeave,
   getCurrentUser,
 } from './utils/user.utils.js';
+import { validUser } from './models/privateRoom.model.js';
 
 const app = express();
 
-const store = MongoStore.create({
-  mongoUrl: process.env.MONGO_URI,
-  autoRemove: 'native',
-});
-
-const sessionMiddleware = session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { maxAge: 69600 },
-  store: store,
-});
-
-app.use(sessionMiddleware);
 const httpServer = createServer(app);
-app.use(cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(logger('dev'));
+app.use(cors());
 connectDatabase();
 app.use('/', router);
-
-const DB = 'chatData';
-const COLLECTION = 'socket.io-adapter-events';
-const mongoClient = new MongoClient(process.env.MONGO_URI);
-await mongoClient.connect();
-const mongoCollection = mongoClient.db(DB).collection(COLLECTION);
-await mongoCollection.createIndex(
-  { createdAt: 1 },
-  { expireAfterSeconds: 3600, background: true }
-);
 
 // attached http server to the socket.io
 const io = new Server(httpServer, {
@@ -65,52 +39,36 @@ const io = new Server(httpServer, {
   },
 });
 
-// convert a connect middleware to a Socket.IO middleware
-const wrap = (middleware) => (socket, next) =>
-  middleware(socket.request, {}, next);
-
-io.use(wrap(sessionMiddleware));
+const jwtSecret = process.env.JWTSECRET;
 // authenticate user
 io.use((socket, next) => {
-  if (socket.handshake.query || socket.handshake.query.token) {
-    jwt.verify(
-      socket.handshake.query.token,
-      jwtSecret,
-      function (err, decoded) {
-        if (err) return next(new Error('Authentication error if block'));
-        socket.decoded = decoded;
-        next();
-        console.log('authenticated succesfully');
-      }
-    );
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication error no token provided'));
   } else {
-    next(new Error('Authentication error else block'));
+    const decoded = jwt.verify(token, jwtSecret);
+    if (!decoded) return next(new Error('Authentication error decoded token'));
+    socket.username = decoded.username;
+    socket.userId = uuidv4();
+    next();
+    console.log('authenticated succesfully');
   }
 });
-
-io.adapter(
-  createAdapter(mongoCollection, {
-    addCreatedAtField: true,
-  })
-);
 
 // create a new connection
 io.on('connection', async (socket) => {
   console.log(`User connected ${socket.id}`);
-  console.log(`total connected clients ${io.engine.clientsCount}`);
-  // create and join room
+  // join room
   socket.on('joinRoom', async (username, room) => {
-    console.log('username', username, 'room', room);
     const user = userJoin(socket.id, username, room);
-    console.log('join room user', user);
     socket.join(user.room);
     await createRoom(user.room, user.username);
     // Welcome current user
     socket.emit(
       'message',
-      formatMessage(user.username, 'Welcome to ChatCord!')
+      formatMessage(user.username, 'Welcome to ChatBoard!')
     );
-    // Broadcast all user when a user connects
+    // Broadcast all user when a user connects but this user have not get this data
     socket.broadcast
       .to(user.room)
       .emit('message', formatMessage(user.username, `has joined the chat`));
@@ -121,8 +79,17 @@ io.on('connection', async (socket) => {
     });
   });
 
+  socket.on('privateRoom', async (admin, allowedUser, room) => {
+    const user = userJoin(socket.id, allowedUser, room);
+    const validallowedUser = await validUser(admin, allowedUser);
+    if (validallowedUser) {
+      socket.join(room);
+
+    } else {
+      return (new Error('Authentication error decoded token'));
+    }
+  });
   const allRoomsData = await allRooms();
-  console.log('allRoomsData', allRoomsData);
   socket.emit('allRooms', allRoomsData);
 
   // Listen for chatMessage
@@ -134,7 +101,6 @@ io.on('connection', async (socket) => {
   // Runs when client disconnects
   socket.on('disconnect', () => {
     const user = userLeave(socket.id);
-    console.log('user', user);
     if (user) {
       io.to(user.room).emit(
         'message',
@@ -149,8 +115,8 @@ io.on('connection', async (socket) => {
   });
 });
 
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
-httpServer.listen(3000, () => {
-  console.log(`server is running on port ${port}`);
+httpServer.listen(PORT, () => {
+  console.log(`server is running on port ${PORT}`);
 });

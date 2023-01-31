@@ -1,33 +1,16 @@
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { findId } from '../models/user.models.js';
+import { findRoom } from '../models/room.model.js';
 dotenv.config();
 
 const secret = process.env.JWTSECRET;
 
 export const chatRoom = async (req, res) => {
   try {
-    const token = req.cookies.token;
     const room = req.query.rooms;
-    if (!token) {
-      return res.status(400).send({
-        status: false,
-        msg: 'your session has expired please login again',
-      });
-    }
-    const result = jwt.verify(token, secret);
-    console.log('result chat room', result);
-    const checkId = await findId(result._id);
-    const username = checkId.username;
-    if (!checkId) {
-      return res.status(401).send({
-        status: false,
-        message: 'you are not a authorised person',
-      });
-    }
-    const data = {};
-    data.username = username;
-    data.room = room;
+    const finddata = await findRoom(room);
+   if(finddata) {
+    return res.status(400).send({status:false,message:'room is already registered'})
+   }
     res.status(200).json({
       status: true,
       msg: 'you have entered in room succesfully',

@@ -5,12 +5,10 @@ const roomSchema = new mongoose.Schema(
     roomName: {
       type: String,
       required: true,
-      unique: true,
     },
     userName: {
       type: String,
       required: true,
-      unique: true,
     },
   },
   { timestamps: true }
@@ -18,14 +16,19 @@ const roomSchema = new mongoose.Schema(
 
 const Room = mongoose.model('rooms', roomSchema);
 
-export const createRoom = async (roomName, username) => {
+export const createRoom = async (roomname, username) => {
   const data = {};
-  data.roomName = roomName;
-  data.username = username;
-  await Room.create(data);
-  return data;
+  data.userName = username;
+  data.roomName = roomname;
+  const result = await Room.create(data);
+  console.log('result', result);
+  return result;
 };
 
 export const allRooms = async () => {
   return await Room.find();
+};
+
+export const findRoom = async (roomName) => {
+  return await Room.findOne(roomName);
 };
