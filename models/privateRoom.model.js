@@ -19,16 +19,11 @@ export const createAllowedUser = async (data) => {
   return await PrivateUser.create(data);
 };
 
-export const validUser = async (admin, allowedUser) => {
-  return await PrivateUser.find({
-    $and: [{ admin: admin }, { allowedUser: allowedUser }],
-  });
-};
-
 export const findUser = async (admin, allowedUser) => {
-  return await PrivateUser.find({
+  const data = await PrivateUser.find({
     $and: [{ admin: admin }, { allowedUser: allowedUser }],
   });
+  return data;
 };
 
 export const createUser = async (admin, allowedUser) => {

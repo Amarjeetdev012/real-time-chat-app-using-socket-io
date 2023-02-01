@@ -18,8 +18,7 @@ import {
   userLeave,
   allUsers,
 } from './utils/user.utils.js';
-import { createUser, findUser, validUser } from './models/privateRoom.model.js';
-import { channel } from 'diagnostics_channel';
+import { createUser, findUser } from './models/privateRoom.model.js';
 
 const app = express();
 
@@ -40,7 +39,7 @@ const io = new Server(httpServer, {
   },
 });
 
-// const jwtSecret = process.env.JWTSECRET;
+const jwtSecret = process.env.JWTSECRET;
 // authenticate user
 // io.use((socket, next) => {
 //   const token = socket.handshake.auth.token;
@@ -55,6 +54,21 @@ const io = new Server(httpServer, {
 //     console.log('authenticated succesfully');
 //   }
 // });
+
+io.of('/private').use((socket, next) => {
+  const token = socket.handshake.query.token;
+  if (!token) {
+    return next(new Error('Authentication error no token provided'));
+  } else {
+    const decoded = jwt.verify(token, jwtSecret);
+    console.log('decoded', decoded);
+    if (!decoded) return next(new Error('Authentication error decoded token'));
+    socket.username = decoded.username;
+    socket.userId = uuidv4();
+    next();
+    console.log('authenticated succesfully');
+  }
+});
 
 // create a new connection
 io.on('connection', async (socket) => {
@@ -79,13 +93,13 @@ io.on('connection', async (socket) => {
     // Broadcast all user when a user connects but this user have not get this data
     socket.broadcast
       .to(user.room)
-      .emit('message', formatMessage(user.username, `has joined the chat`));
+      .emit('info', formatMessage(user.username, `has joined the chat`));
   });
 
   // send and get message in public room
   socket.on('new message', (room, message, name) => {
-    console.log('msg=====', message);
     console.log('room===', room);
+    console.log('msg=====', message);
     console.log('name====', name);
     io.to(room).emit('new message', {
       message: message,
@@ -98,8 +112,8 @@ io.on('connection', async (socket) => {
   socket.emit('allUser', allUser);
 
   // one to one message with authenticated users
-  socket.on('message', (msg) => {
-    io.emit('message', { message: msg, user: socket.username });
+  socket.on('directmessage', (msg) => {
+    io.emit('directmessage', { message: msg, user: socket.username });
   });
 
   // private room message
@@ -121,10 +135,11 @@ io.on('connection', async (socket) => {
 
   // Runs when client disconnects
   socket.on('disconnect', () => {
+    console.log(`user disconnected ${socket.id}`);
     const user = userLeave(socket.id);
     if (user) {
       io.to(user.room).emit(
-        'message',
+        'dissconnectmessage',
         formatMessage(`${user.username} has left the chat`)
       );
       // Send users and room info
@@ -134,41 +149,46 @@ io.on('connection', async (socket) => {
       });
     }
   });
+});
 
-  // create dynamic roomspace
-  socket.on('create namespace', (name) => {
-    const namespace = io.of(`/${name}`);
-    namespace.on('connection', (nsSocket) => {
-      // join room
-      nsSocket.on('privateRoom', async (admin, allowedUser, room) => {
-        const user = userJoin(nsSocket.id, allowedUser, room);
-        nsSocket.on('addUser',async(allowedUser)=>{
-          const findUsers = await findUser(admin, allowedUser)
-          if(!findUsers.length>0){
-            await createUser(admin, allowedUser)
-          }
-        })
-        const validallowedUser = await validUser(admin, allowedUser);
-        if (validallowedUser.length > 0) {
-          nsSocket.join(room);
-          nsSocket.emit('success', `You have joined the room: ${room}`);
-          namespace
-            .to(room)
-            .emit('new user', `A new user has joined the room: ${room}`);
-          nsSocket.on('private message', (msg) => {
-            io.to(room).emit('private message', msg);
-          });
-          nsSocket.on('leaveRoom', (room) => {
-            nsSocket.leave(room);
-          });
-        } else {
-          return new Error('Authentication error private room message');
+// create channel roomspace
+const namespace = io.of('/private');
+namespace.on('connection', (socket) => {
+  console.log('user connected private');
+  // join room
+  socket.on('privateRoom', async (admin, allowedUser, room) => {
+    const user = userJoin(socket.id, allowedUser, room);
+    const findUsers = await findUser(admin, allowedUser);
+    if (findUsers[0].admin) {
+      socket.on('addUser', async (allowedUser) => {
+        const findUsers = await findUser(admin, allowedUser);
+        console.log('findUsers========', findUsers);
+        if (!findUsers.length > 0) {
+          await createUser(admin, allowedUser);
         }
       });
-      nsSocket.on('disconnect', () => {
-        console.log('Private namespace: Client disconnected');
+    }
+
+    const validallowedUser = await findUser(admin, allowedUser);
+    if (validallowedUser.length > 0) {
+      socket.join(room);
+      socket.emit('success', `You have joined the room: ${room}`);
+      namespace
+        .to(room)
+        .emit('new user', `A new user has joined the room: ${room}`);
+      socket.on('private message', (msg, room) => {
+        console.log('msg======', msg);
+        namespace.to(room).emit('private message', msg);
       });
-    });
+      socket.on('leaveRoom', (room) => {
+        socket.leave(room);
+      });
+    } else {
+      return new Error('Authentication error private room message');
+    }
+  });
+  socket.on('disconnect', () => {
+    console.log('Private namespace: Client disconnected');
   });
 });
 

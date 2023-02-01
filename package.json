@@ -21,7 +21,6 @@
   },
   "homepage": "https://github.com/Amarjeetdev012/real-time-chat-app-using-socket-io#readme",
   "dependencies": {
-    "@socket.io/mongo-adapter": "^0.2.1",
     "axios": "^1.2.6",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
