@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const privateRoomSchema = new mongoose.Schema(
   {
-    username: {
+    admin: {
       type: String,
       required: true,
     },
@@ -19,9 +19,21 @@ export const createAllowedUser = async (data) => {
   return await PrivateUser.create(data);
 };
 
-export const validUser = async (username, allowedUser) => {
-  return await PrivateUser.findOne(
-    { username: username },
-    { allowedUser: allowedUser }
-  );
+export const validUser = async (admin, allowedUser) => {
+  return await PrivateUser.find({
+    $and: [{ admin: admin }, { allowedUser: allowedUser }],
+  });
+};
+
+export const findUser = async (admin, allowedUser) => {
+  return await PrivateUser.find({
+    $and: [{ admin: admin }, { allowedUser: allowedUser }],
+  });
+};
+
+export const createUser = async (admin, allowedUser) => {
+  const data = {};
+  data.admin = admin;
+  data.allowedUser = allowedUser;
+  return await PrivateUser.create(data);
 };

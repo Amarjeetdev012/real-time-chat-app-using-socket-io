@@ -21,7 +21,7 @@ export const createRoom = async (roomname, username) => {
   data.userName = username;
   data.roomName = roomname;
   const result = await Room.create(data);
-  console.log('result', result);
+  console.log('result====', result);
   return result;
 };
 
@@ -30,5 +30,6 @@ export const allRooms = async () => {
 };
 
 export const findRoom = async (roomName) => {
-  return await Room.findOne(roomName);
+  const data = await Room.findOne({ roomName: roomName });
+  return data;
 };
