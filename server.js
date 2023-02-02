@@ -58,15 +58,21 @@ const jwtSecret = process.env.JWTSECRET;
 io.of('/private').use((socket, next) => {
   const token = socket.handshake.query.token;
   if (!token) {
-    return next(new Error('Authentication error no token provided'));
+    return next(new Error('Authentication error no token'));
   } else {
-    const decoded = jwt.verify(token, jwtSecret);
-    console.log('decoded', decoded);
-    if (!decoded) return next(new Error('Authentication error decoded token'));
-    socket.username = decoded.username;
-    socket.userId = uuidv4();
-    next();
-    console.log('authenticated succesfully');
+    console.log('token', token);
+    jwt.verify(token, jwtSecret, function (err, decoded) {
+      if (err)
+        return next(
+          new Error('Authentication error token expired please login again')
+        );
+      else {
+        socket.username = decoded.username;
+        socket.userId = uuidv4();
+      }
+      next();
+      console.log('authenticated succesfully');
+    });
   }
 });
 
@@ -158,13 +164,13 @@ namespace.on('connection', (socket) => {
   // join room
   socket.on('privateRoom', async (admin, allowedUser, room) => {
     const user = userJoin(socket.id, allowedUser, room);
-    const findUsers = await findUser(admin, allowedUser);
+    const findUsers = await findUser(admin, allowedUser, room);
     if (findUsers[0].admin) {
       socket.on('addUser', async (allowedUser) => {
         const findUsers = await findUser(admin, allowedUser);
         console.log('findUsers========', findUsers);
         if (!findUsers.length > 0) {
-          await createUser(admin, allowedUser);
+          await createUser(admin, allowedUser, room);
         }
       });
     }

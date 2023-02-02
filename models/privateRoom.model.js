@@ -9,6 +9,9 @@ const privateRoomSchema = new mongoose.Schema(
     allowedUser: {
       type: String,
     },
+    room: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
