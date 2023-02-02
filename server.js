@@ -18,7 +18,11 @@ import {
   userLeave,
   allUsers,
 } from './utils/user.utils.js';
-import { createUser, findUser } from './models/privateRoom.model.js';
+import {
+  createUser,
+  findUser,
+  verifyUser,
+} from './models/privateRoom.model.js';
 
 const app = express();
 
@@ -104,9 +108,6 @@ io.on('connection', async (socket) => {
 
   // send and get message in public room
   socket.on('new message', (room, message, name) => {
-    console.log('room===', room);
-    console.log('msg=====', message);
-    console.log('name====', name);
     io.to(room).emit('new message', {
       message: message,
       name: name,
@@ -159,8 +160,17 @@ io.on('connection', async (socket) => {
 
 // create channel roomspace
 const namespace = io.of('/private');
-namespace.on('connection', (socket) => {
+namespace.on('connection', async (socket) => {
   console.log('user connected private');
+  const verifyusername = await verifyUser(socket.username);
+  console.log('verifyusername', verifyusername);
+  if (!verifyusername) {
+    // handling error we can use exception
+    socket.emit('exception', {
+      errorMessage:
+        'authentication error user is not allowed to enter this channel',
+    });
+  }
   // join room
   socket.on('privateRoom', async (admin, allowedUser, room) => {
     const user = userJoin(socket.id, allowedUser, room);

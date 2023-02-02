@@ -35,3 +35,9 @@ export const createUser = async (admin, allowedUser) => {
   data.allowedUser = allowedUser;
   return await PrivateUser.create(data);
 };
+
+export const verifyUser = async (allowedUser) => {
+  return await PrivateUser.findOne({
+    $or: [{ admin: allowedUser }, { allowedUser: allowedUser }],
+  });
+};
