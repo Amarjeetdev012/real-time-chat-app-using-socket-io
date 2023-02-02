@@ -12,12 +12,7 @@ import cookieParser from 'cookie-parser';
 import { connectDatabase } from './database/mongoose.database.js';
 import { formatMessage } from './utils/message.utils.js';
 import { allRooms, createRoom, findRoom } from './models/room.model.js';
-import {
-  getRoomUsers,
-  userJoin,
-  userLeave,
-  allUsers,
-} from './utils/user.utils.js';
+import { getRoomUsers, userJoin, userLeave } from './utils/user.utils.js';
 import {
   createUser,
   findUser,
@@ -87,13 +82,12 @@ io.on('connection', async (socket) => {
   // join room public
   socket.on('joinRoom', async (username, room) => {
     const user = userJoin(socket.id, username, room);
-    const roomData = await findRoom(user.room);
+    console.log('user===', user);
+    const roomData = await findRoom(room);
     if (!roomData) {
       await createRoom(user.room, user.username);
     }
     socket.join(user.room);
-    console.log('new joined user', user);
-
     // Welcome current user
     socket.emit(
       'message',
@@ -105,18 +99,18 @@ io.on('connection', async (socket) => {
       .to(user.room)
       .emit('info', formatMessage(user.username, `has joined the chat`));
   });
-
   // send and get message in public room
   socket.on('new message', (room, message, name) => {
+    console.log('room, message, name', room, message, name);
     io.to(room).emit('new message', {
       message: message,
       name: name,
     });
   });
-
-  // connected all users
-  const allUser = allUsers();
-  socket.emit('allUser', allUser);
+  socket.on('getroominfo', (room) => {
+    console.log('room', room);
+    socket.emit('allUser', getRoomUsers(room));
+  });
 
   // one to one message with authenticated users
   socket.on('directmessage', (msg) => {
